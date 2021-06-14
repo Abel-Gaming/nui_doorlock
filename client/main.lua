@@ -6,18 +6,31 @@ local playerNotActive = true
 Citizen.CreateThread(function()
 	while ESX == nil do
 		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-		Citizen.Wait(0)
+		Citizen.Wait(250)
 	end
-	-- Sync doors with the server
-	Citizen.Wait(1000)
 	ESX.TriggerServerCallback('nui_doorlock:getDoorInfo', function(doorInfo)
 		for doorID, locked in pairs(doorInfo) do
 			Config.DoorList[doorID].locked = locked
 		end
 		retrievedData = true
 	end)
+	Citizen.Wait(1000)
 	while not retrievedData do Citizen.Wait(0) end
-	while IsPedStill(PlayerPedId()) and not IsPedInAnyVehicle(PlayerPedId()) do Citizen.Wait(0) end
+	updateDoors()
+	playerNotActive = nil
+	retrievedData = nil
+end)
+
+RegisterNetEvent('PrimeRP:ReloadDoorCB')
+AddEventHandler('PrimeRP:ReloadDoorCB', function()
+	ESX.TriggerServerCallback('nui_doorlock:getDoorInfo', function(doorInfo)
+		for doorID, locked in pairs(doorInfo) do
+			Config.DoorList[doorID].locked = locked
+		end
+		retrievedData = true
+	end)
+	Citizen.Wait(1000)
+	while not retrievedData do Citizen.Wait(0) end
 	updateDoors()
 	playerNotActive = nil
 	retrievedData = nil
@@ -427,13 +440,40 @@ RegisterKeyMapping('doorlock', Config.KeybingText, 'keyboard', 'e')
 RegisterNetEvent('esx_lockpick:onUse') -- Modify for whichever lockpick you're using
 AddEventHandler('esx_lockpick:onUse', function()
 	if not isDead and not isCuffed and closestDoor and closestV.lockpick then
-		TaskTurnPedToFaceCoord(playerPed, closestV.textCoords, 0)
-		Citizen.Wait(300)
-		local count = 0
-		while GetIsTaskActive(playerPed, 225) do Citizen.Wait(10) count = count + 1 if count == 150 then break end end
-		Citizen.Wait(1800)
+	
+		TriggerEvent("mythic_progressbar:client:progress", {
+			name = "doorlock_picking",
+			duration = 30000,
+			label = "Lockpicking Door",
+			useWhileDead = false,
+			canCancel = true,
+			controlDisables = {
+				disableMovement = true,
+				disableCarMovement = true,
+				disableMouse = false,
+				disableCombat = true,
+			},
+			animation = {
+				animDict = "missheistdockssetup1clipboard@idle_a",
+				anim = "idle_a",
+			},
+		}, function(status)
+        if not status then
+			TaskTurnPedToFaceCoord(playerPed, closestV.textCoords, 0)
+			Citizen.Wait(300)
+			local count = 0
+			while GetIsTaskActive(playerPed, 225) do 
+			Citizen.Wait(10) 
+			count = count + 1 
+			if count == 150 then 
+				break 
+			end 
+		end
 		local locked = not closestV.locked
-		TriggerServerEvent('nui_doorlock:updateState', closestDoor, locked, nil, true) -- Broadcast new state of the door to everyone
+		TriggerServerEvent('nui_doorlock:updateState', closestDoor, locked, nil, true)
+        end
+		end)
+
 	end
 end)
 

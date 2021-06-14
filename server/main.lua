@@ -123,8 +123,13 @@ function IsAuthorized(xPlayer, doorID, locked, usedLockpick)
 	if not canOpen then
 		local group = xPlayer.getGroup()
 		if group == 'admin' or group == 'superadmin' then
-			print(group..' '..xPlayer.getName()..' was authorised to use a door')
-			canOpen = true
+			if Config.CanAdminOpen then
+				print(group..' '..xPlayer.getName()..' was authorised to use a door')
+				canOpen = true
+			else
+				local playerName = xPlayer.getName()
+				print('' .. playerName .. ' tried to open a door they do not have access to.')
+			end
 		end
 	end
 
