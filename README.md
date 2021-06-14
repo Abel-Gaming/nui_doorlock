@@ -1,4 +1,5 @@
-# Dropping support, sick of people not paying attention.
+# Fork Changes
+Added an option in the config file where admins cannot open every door, and also allowed for usage of lockpicks to be used on doors.
 
 # <a href='https://forum.cfx.re/t/esx-nui-doorlock-improved-performance-supports-sliding-doors/2068259'>nui_doorlock</a>
 A fork of esx_doorlock, featuring improved performance and improved functionality.
